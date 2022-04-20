@@ -36,7 +36,6 @@ def parse_variable_terms(variable_part: str):
 
 
 def parse_raw_row(raw_row: str):
-    # todo: add handling for constant
     variable_part, constant_part = raw_row.split("=")
     terms = parse_variable_terms(variable_part)
     constant = int(constant_part.strip())
