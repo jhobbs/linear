@@ -22,7 +22,6 @@ def parse_term(term: str):
 
     coefficient = Rational(coefficient)
 
-    print(f"coeff: {coefficient} var: {variable}")
     return (
         coefficient,
         variable,
@@ -113,7 +112,7 @@ def compare_rows(row_a, row_b):
     for i in range(len(row_a)):
         if row_a[i] == row_b[i]:
             continue
-        if row_a[i] == 0 or ((row_a[i] < row_b[i]) and (not row_b[i] == 0)):
+        if row_a[i] == 0 or (abs(row_a[i]) < abs(row_b[i])):
             return -1
         return 1
     return 0
@@ -124,7 +123,7 @@ def swap_rows(matrix, row1, row2):
 
 
 def sort_rows(matrix):
-    # bubble sort
+    # bubble sort, but 0's are less than negatives
     while True:
         swapped = False
         for i in range(matrix.rows):
