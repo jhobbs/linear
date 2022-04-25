@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from sympy import Rational, Matrix, zeros
 from typing import List
@@ -8,19 +9,13 @@ def parse_term(term: str):
         raise Exception(f"Invalid term: {term}")
 
     variable = term[-1]
-    coefficient = 1
-    for i, c in enumerate(reversed(term[:-1])):
-        if not c.isdigit():
-            if c == "+":
-                break
-            if c == "-":
-                coefficient = coefficient * -1
-            else:
-                raise Exception(f"Invalid term: {term}")
-        else:
-            coefficient += int(c) * 10 ** (i)
-
-    coefficient = Rational(coefficient)
+    sign = term[0]
+    if term[0].isdigit():
+        coefficient = Rational(term[0:-1])
+    elif len(term[1:-1]) == 0:
+        coefficient = Rational(1)
+    else:
+        coefficient = Rational(term[1:-1])
 
     return (
         coefficient,
@@ -139,7 +134,7 @@ def sort_rows(matrix):
 
 
 def reduce_rows(matrix):
-    if len(matrix) == 0:
+    if len(matrix) == 0 or matrix == Matrix([0]):
         return
 
     leading_coeff = matrix[0, 0]
@@ -158,7 +153,7 @@ def reduce_rows(matrix):
 
 
 def get_matrix_from_file():
-    with open("matrix2.txt") as matrix_file:
+    with open(sys.argv[1]) as matrix_file:
         lines = matrix_file.readlines()
     matrix = rows_to_matrix(lines)
     return matrix
