@@ -1,5 +1,5 @@
 import numpy as np
-from sympy import Rational
+from sympy import Rational, Matrix, zeros
 from typing import List
 
 
@@ -69,11 +69,11 @@ def rows_to_matrix(input_rows):
         rows.append(row_variables)
         constants.append(constant)
     var_col = variables_to_cols(rows)
-    matrix = np.ndarray((len(rows), len(var_col) + 1))
+    matrix = zeros(len(rows), len(var_col) + 1)
     for i, row in enumerate(rows):
         for variable, coefficient in row.items():
-            matrix[i][var_col[variable]] = coefficient
-        matrix[i][-1] = constants[i]
+            matrix[i, var_col[variable]] = coefficient
+        matrix[i, -1] = constants[i]
     return matrix
 
 
@@ -92,10 +92,10 @@ def is_reduced_row_echelon(matrix):
         return True
 
     for i in range(len(matrix[0])):
-        if matrix[0][i] == 0:
+        if matrix[0, i] == 0:
             if not np.all(matrix[1:, i] == 0):
                 return False
-        elif matrix[0][i] == 1:
+        elif matrix[0, i] == 1:
             if not np.all(matrix[1:, i] == 0):
                 return False
             return is_reduced_row_echelon(matrix[1:, i:])
@@ -119,15 +119,19 @@ def compare_rows(row_a, row_b):
     return 0
 
 
+def swap_rows(matrix, row1, row2):
+    return matrix.elementary_row_op("n<->m", row1=row1, row2=row2)
+
+
 def sort_rows(matrix):
     # bubble sort
     while True:
         swapped = False
-        for i in range(len(matrix)):
-            if i == len(matrix) - 1:
+        for i in range(matrix.rows):
+            if i == matrix.rows - 1:
                 break
-            if compare_rows(matrix[i], matrix[i + 1]) == -1:
-                matrix[[i, i + 1]] = matrix[[i + 1, i]]
+            if compare_rows(matrix.row(i), matrix.row(i + 1)) == -1:
+                matrix = swap_rows(matrix, i, i + 1)
                 swapped = True
 
         if swapped == False:
@@ -139,16 +143,20 @@ def reduce_rows(matrix):
     if len(matrix) == 0:
         return
 
-    leading_coeff = matrix[0][0]
+    leading_coeff = matrix[0, 0]
     if leading_coeff == 0:
         raise Exception(f"Unexpected 0 leading coefficient: {i} {matrix}")
-    matrix[0] = matrix[0] * 1 / leading_coeff
-    for i in range(len(matrix) - 1):
-        row_leading_coeff = matrix[i + 1][0]
+    matrix[0, :] = matrix[0, :] * 1 / leading_coeff
+    print(matrix)
+    for i in range(matrix.rows - 1):
+        row_leading_coeff = matrix[i + 1, 0]
         if row_leading_coeff == 0:
             continue
-        matrix[i + 1] = matrix[i + 1] + (-row_leading_coeff * matrix[0])
-    reduce_rows(matrix[1:, 1:])
+        matrix[i + 1, :] = matrix[i + 1, :] + (-row_leading_coeff * matrix[0, :])
+    reduced_submatrix = reduce_rows(matrix[1:, 1:])
+    if reduced_submatrix is not None:
+        matrix[1:, 1:] = reduced_submatrix
+    return matrix
 
 
 def get_matrix_from_file():
