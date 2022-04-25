@@ -134,7 +134,7 @@ def sort_rows(matrix):
 
 
 def reduce_rows(matrix):
-    if len(matrix) == 0 or matrix == Matrix([0]):
+    if matrix.is_zero_matrix:
         return
 
     leading_coeff = matrix[0, 0]
