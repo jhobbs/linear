@@ -8,7 +8,7 @@ def parse_term(term: str):
         raise Exception(f"Invalid term: {term}")
 
     variable = term[-1]
-    coefficient = 0
+    coefficient = 1
     for i, c in enumerate(reversed(term[:-1])):
         if not c.isdigit():
             if c == "+":
@@ -113,7 +113,7 @@ def compare_rows(row_a, row_b):
     for i in range(len(row_a)):
         if row_a[i] == row_b[i]:
             continue
-        if row_a[i] == 0 or row_a[i] < row_b[i]:
+        if row_a[i] == 0 or ((row_a[i] < row_b[i]) and (not row_b[i] == 0)):
             return -1
         return 1
     return 0
@@ -147,7 +147,6 @@ def reduce_rows(matrix):
     if leading_coeff == 0:
         raise Exception(f"Unexpected 0 leading coefficient: {i} {matrix}")
     matrix[0, :] = matrix[0, :] * 1 / leading_coeff
-    print(matrix)
     for i in range(matrix.rows - 1):
         row_leading_coeff = matrix[i + 1, 0]
         if row_leading_coeff == 0:
@@ -160,7 +159,7 @@ def reduce_rows(matrix):
 
 
 def get_matrix_from_file():
-    with open("matrix.txt") as matrix_file:
+    with open("matrix2.txt") as matrix_file:
         lines = matrix_file.readlines()
     matrix = rows_to_matrix(lines)
     return matrix
@@ -168,8 +167,8 @@ def get_matrix_from_file():
 
 def main():
     matrix = get_matrix_from_file()
-    sort_rows(matrix)
-    reduce_rows(matrix)
+    matrix = sort_rows(matrix)
+    matrix = reduce_rows(matrix)
     print(matrix)
 
 
