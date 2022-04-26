@@ -166,6 +166,17 @@ def number_of_solutions(matrix):
     return oo
 
 
+def back_substitute(matrix):
+    for i in range(matrix.rows - 1, 0, -1):
+        for j in range(len(matrix[i, :-1])):
+            if matrix[i, j] != 1:
+                continue
+            for i2 in range(i):
+                if matrix[i2, j] != 0:
+                    matrix[i2, :] = matrix[i2, :] + -matrix[i2, j] * matrix[i, :]
+    return matrix
+
+
 def get_matrix_from_file():
     with open(sys.argv[1]) as matrix_file:
         lines = matrix_file.readlines()
@@ -179,6 +190,8 @@ def main():
     matrix = reduce_rows(matrix)
     print(matrix)
     print(number_of_solutions(matrix))
+    matrix = back_substitute(matrix)
+    print(matrix)
 
 
 if __name__ == "__main__":
