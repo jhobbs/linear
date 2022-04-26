@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-from sympy import Rational, Matrix, zeros
+from sympy import Rational, Matrix, zeros, oo
 from typing import List
 
 
@@ -152,6 +152,20 @@ def reduce_rows(matrix):
     return matrix
 
 
+def number_of_solutions(matrix):
+    non_zero_rows = 0
+    for i in range(matrix.rows):
+        # check for contradiction
+        if matrix[i, :-1].is_zero_matrix and matrix[i, -1] != 0:
+            return 0
+
+        if not matrix[i, :].is_zero_matrix:
+            non_zero_rows += 1
+    if non_zero_rows == len(matrix[i, :]) - 1:
+        return 1
+    return oo
+
+
 def get_matrix_from_file():
     with open(sys.argv[1]) as matrix_file:
         lines = matrix_file.readlines()
@@ -164,6 +178,7 @@ def main():
     matrix = sort_rows(matrix)
     matrix = reduce_rows(matrix)
     print(matrix)
+    print(number_of_solutions(matrix))
 
 
 if __name__ == "__main__":
