@@ -29,13 +29,16 @@ class LinearSystemOfEquations:
             raise Exception(f"Invalid term: {term}")
 
         variable = term[-1]
-        sign = term[0]
         if term[0].isdigit():
             coefficient = Rational(term[0:-1])
-        elif len(term[1:-1]) == 0:
-            coefficient = Rational(1)
         else:
-            coefficient = Rational(term[1:-1])
+            if len(term[1:-1]) == 0:
+                coefficient = Rational(1)
+            else:
+                coefficient = Rational(term[1:-1])
+            sign = term[0]
+            if sign == "-":
+                coefficient = coefficient * -1
 
         return (
             coefficient,
