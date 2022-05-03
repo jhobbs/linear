@@ -1,12 +1,12 @@
 import sys
 import numpy as np
-from sympy import Rational, Matrix, zeros, oo
+from sympy import Rational, Matrix, zeros, oo, FiniteSet
 from typing import List, Dict, Tuple
 
 
 class LinearSystemOfEquations:
     def __init__(self, raw_rows):
-        self._matrix = self.rows_to_matrix(raw_rows)
+        self._matrix, self._var_col = self.rows_to_matrix(raw_rows)
 
     def rows_to_matrix(self, input_rows):
         rows = []
@@ -21,7 +21,7 @@ class LinearSystemOfEquations:
             for variable, coefficient in row.items():
                 matrix[i, var_col[variable]] = coefficient
             matrix[i, -1] = constants[i]
-        return matrix
+        return matrix, var_col
 
     @staticmethod
     def parse_term(term: str):
@@ -170,6 +170,13 @@ class LinearSystemOfEquations:
                             + -self._matrix[i2, j] * self._matrix[i, :]
                         )
 
+    def solution_set(self):
+        if self.number_of_solutions() == 0:
+            return FiniteSet()
+        if self.number_of_solutions() == 1:
+            return FiniteSet(tuple(self._matrix.col(-1)))
+        raise Exception("Can't handle infinite solution sets yet")
+
     @classmethod
     def from_file(cls, path):
         with open(path) as matrix_file:
@@ -183,6 +190,7 @@ def main():
     system.reduce_rows()
     print(system._matrix)
     print(system.number_of_solutions())
+    print(system.solution_set())
 
 
 if __name__ == "__main__":
