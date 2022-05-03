@@ -70,10 +70,16 @@ class LinearSystemOfEquations:
         for row in rows:
             for variable in row.keys():
                 variable_set.add(variable)
-
         return {
             variable: position for position, variable in enumerate(sorted(variable_set))
         }
+
+    def cols_to_vars(self):
+        result = [
+            variable
+            for variable, _ in list(sorted(self._var_col.items(), key=lambda x: x[1]))
+        ]
+        return result
 
     def is_reduced_row_echelon(self):
         return self._inner_is_reduced_row_echelon(self._matrix)
@@ -177,6 +183,10 @@ class LinearSystemOfEquations:
             return FiniteSet(tuple(self._matrix.col(-1)))
         raise Exception("Can't handle infinite solution sets yet")
 
+    def display_solution(self):
+        vars = ", ".join(self.cols_to_vars())
+        print(f"{vars} = {self.solution_set()}")
+
     @classmethod
     def from_file(cls, path):
         with open(path) as matrix_file:
@@ -186,11 +196,10 @@ class LinearSystemOfEquations:
 
 def main():
     system = LinearSystemOfEquations.from_file(sys.argv[1])
-    print(system._matrix)
+    # print(system._matrix)
     system.reduce_rows()
-    print(system._matrix)
-    print(system.number_of_solutions())
-    print(system.solution_set())
+    # print(system._matrix)
+    system.display_solution()
 
 
 if __name__ == "__main__":
