@@ -1,30 +1,31 @@
-from unittest import TestCase
-import numpy as np
+import pytest
+from sympy import FiniteSet, Rational
 
-from gaussian import is_reduced_row_echelon
+from gaussian import LinearSystemOfEquations
 
 
-class TestIsReducedRowEchelon(TestCase):
-    def test_empty_array(self):
-        array = np.ndarray((0,))
-        self.assertTrue(is_reduced_row_echelon(array))
-
-    def test_one_row(self):
-        array = np.asarray([[0,1,2]])
-        self.assertTrue(is_reduced_row_echelon(array))
-
-    def test_two_rows(self):
-        array = np.asarray([[0,1,2], [0,0,1]])
-        self.assertTrue(is_reduced_row_echelon(array))
-    
-    def test_one_row_not_reduced(self):
-        array = np.asarray([[0,2,2]])
-        self.assertFalse(is_reduced_row_echelon(array))
-    
-    def test_two_rows_not_reduced(self):
-        array = np.asarray([[1,0,0],[0,2,2]])
-        self.assertFalse(is_reduced_row_echelon(array))
-    
-    def test_two_rows_wrong_order(self):
-        array = np.asarray([[0,1,0],[1,0,0]])
-        self.assertFalse(is_reduced_row_echelon(array))
+@pytest.mark.parametrize(
+    "system, solution",
+    (
+        (
+            LinearSystemOfEquations.from_string("2x +2y = 5,x -4y = 0"),
+            FiniteSet(
+                (
+                    Rational("2"),
+                    Rational("1/2"),
+                )
+            ),
+        ),
+        (
+            LinearSystemOfEquations.from_string("-x +y = 1, x +y = 2"),
+            FiniteSet(
+                (
+                    Rational("1/2"),
+                    Rational("3/2"),
+                )
+            ),
+        ),
+    ),
+)
+def test_finite_solutions(system, solution):
+    assert system.solution_set() == solution

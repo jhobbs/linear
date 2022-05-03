@@ -7,6 +7,8 @@ from typing import List, Dict, Tuple
 class LinearSystemOfEquations:
     def __init__(self, raw_rows):
         self._matrix, self._var_col = self.rows_to_matrix(raw_rows)
+        self._original_matrix = self._matrix.copy()
+        self.reduce_rows()
 
     def rows_to_matrix(self, input_rows):
         rows = []
@@ -134,7 +136,6 @@ class LinearSystemOfEquations:
         self.back_substitute()
 
     def _inner_reduce_rows(self, matrix):
-        print(matrix)
         if matrix[:, :-1].is_zero_matrix:
             return
 
@@ -197,7 +198,11 @@ class LinearSystemOfEquations:
     @classmethod
     def from_file(cls, path):
         with open(path) as matrix_file:
-            lines = matrix_file.readlines()
+            return cls.from_string(matrix_file.read(), sep="\n")
+
+    @classmethod
+    def from_string(cls, string, sep=","):
+        lines = string.split(sep)
         return cls(lines)
 
 
