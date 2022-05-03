@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-from sympy import Rational, Matrix, zeros, oo, FiniteSet
+from sympy import Rational, Matrix, zeros, oo, FiniteSet, init_printing
 from typing import List, Dict, Tuple
 
 
@@ -134,7 +134,8 @@ class LinearSystemOfEquations:
         self.back_substitute()
 
     def _inner_reduce_rows(self, matrix):
-        if matrix.is_zero_matrix:
+        print(matrix)
+        if matrix[:, :-1].is_zero_matrix:
             return
 
         leading_coeff = matrix[0, 0]
@@ -180,7 +181,13 @@ class LinearSystemOfEquations:
         if self.number_of_solutions() == 0:
             return FiniteSet()
         if self.number_of_solutions() == 1:
-            return FiniteSet(tuple(self._matrix.col(-1)))
+            for i in range(self._matrix.rows):
+                if self._matrix[i, :].is_zero_matrix:
+                    boundary_row = i
+                    break
+            else:
+                boundary_row = i + 1
+            return FiniteSet(tuple(self._matrix[:boundary_row, -1]))
         raise Exception("Can't handle infinite solution sets yet")
 
     def display_solution(self):
@@ -195,6 +202,7 @@ class LinearSystemOfEquations:
 
 
 def main():
+    init_printing(use_unicode=True)
     system = LinearSystemOfEquations.from_file(sys.argv[1])
     # print(system._matrix)
     system.reduce_rows()
