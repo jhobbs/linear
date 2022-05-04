@@ -83,25 +83,6 @@ class LinearSystemOfEquations:
         ]
         return result
 
-    def is_reduced_row_echelon(self):
-        return self._inner_is_reduced_row_echelon(self._matrix)
-
-    def _inner_is_reduced_row_echelon(self, matrix):
-        if len(matrix) == 0:
-            return True
-
-        for i in range(len(matrix[0])):
-            if matrix[0, i] == 0:
-                if not np.all(matrix[1:, i] == 0):
-                    return False
-            elif matrix[0, i] == 1:
-                if not np.all(matrix[1:, i] == 0):
-                    return False
-                return self._inner_is_reduced_row_echelon(matrix[1:, i:])
-            else:
-                return False
-        return True
-
     @staticmethod
     def compare_rows(row_a, row_b):
         for i in range(len(row_a)):
