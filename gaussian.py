@@ -91,10 +91,10 @@ class LinearSystemOfEquations:
     def __init__(self, matrix, column_variables):
         self._matrix = matrix
         self._column_variables = column_variables
-        self._reduced_matrix = self.reduce_rows(self._matrix.copy())
+        self._reduced_matrix = self._reduce_rows(self._matrix.copy())
 
     @staticmethod
-    def compare_rows(row_a, row_b):
+    def _compare_rows(row_a, row_b):
         for i in range(len(row_a)):
             if row_a[i] == row_b[i]:
                 continue
@@ -104,30 +104,32 @@ class LinearSystemOfEquations:
         return 0
 
     @staticmethod
-    def swap_rows(matrix, row1, row2):
+    def _swap_rows(matrix, row1, row2):
         return matrix.elementary_row_op("n<->m", row1=row1, row2=row2)
 
-    def sort_rows(self, matrix):
+    def _sort_rows(self, matrix):
         # bubble sort, but 0's are less than negatives
         while True:
             swapped = False
             for i in range(matrix.rows):
                 if i == matrix.rows - 1:
                     break
-                if self.compare_rows(matrix.row(i), matrix.row(i + 1)) == -1:
-                    matrix = self.swap_rows(matrix, i, i + 1)
+                if self._compare_rows(matrix.row(i), matrix.row(i + 1)) == -1:
+                    matrix = self._swap_rows(matrix, i, i + 1)
                     swapped = True
 
             if swapped == False:
                 break
         return matrix
 
-    def reduce_rows(self, matrix):
-        reduced_matrix = self._inner_reduce_rows(self.sort_rows(matrix))
-        self.back_substitute(reduced_matrix)
-        return reduced_matrix
+    def _reduce_rows(self, matrix):
+        """Convert matrix to reduced row echelon form."""
+        echelon_matrix = self._gaussian_elimination(self._sort_rows(matrix))
+        self._back_substitute(echelon_matrix)
+        return echelon_matrix
 
-    def _inner_reduce_rows(self, matrix):
+    def _gaussian_elimination(self, matrix):
+        """Convert matrix to echelon form."""
         if matrix[:, :-1].is_zero_matrix:
             return matrix
 
@@ -140,12 +142,23 @@ class LinearSystemOfEquations:
             if row_leading_coeff == 0:
                 continue
             matrix[i + 1, :] = matrix[i + 1, :] + (-row_leading_coeff * matrix[0, :])
-        reduced_submatrix = self._inner_reduce_rows(matrix[1:, 1:])
+        reduced_submatrix = self._gaussian_elimination(matrix[1:, 1:])
         if reduced_submatrix is not None:
             matrix[1:, 1:] = reduced_submatrix
         return matrix
 
+    def _back_substitute(self, matrix):
+        for i in range(matrix.rows - 1, 0, -1):
+            for j in range(len(matrix[i, :-1])):
+                if matrix[i, j] != 1:
+                    continue
+                for i2 in range(i):
+                    if matrix[i2, j] != 0:
+                        matrix[i2, :] = matrix[i2, :] + -matrix[i2, j] * matrix[i, :]
+        return matrix
+
     def number_of_solutions(self):
+        """Return the number of solutions to the system."""
         non_zero_rows = 0
         for i in range(self._reduced_matrix.rows):
             # check for contradiction
@@ -160,16 +173,6 @@ class LinearSystemOfEquations:
         if non_zero_rows == len(self._reduced_matrix[i, :]) - 1:
             return 1
         return oo
-
-    def back_substitute(self, matrix):
-        for i in range(matrix.rows - 1, 0, -1):
-            for j in range(len(matrix[i, :-1])):
-                if matrix[i, j] != 1:
-                    continue
-                for i2 in range(i):
-                    if matrix[i2, j] != 0:
-                        matrix[i2, :] = matrix[i2, :] + -matrix[i2, j] * matrix[i, :]
-        return matrix
 
     def solution_set(self):
         if self.number_of_solutions() == 0:
