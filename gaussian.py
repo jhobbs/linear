@@ -6,7 +6,7 @@ from typing import List, Dict, Tuple
 
 class LinearSystemOfEquations:
     def __init__(self, raw_rows):
-        self._matrix, self._var_col = self.rows_to_matrix(raw_rows)
+        self._matrix, self._column_variables = self.rows_to_matrix(raw_rows)
         self._reduced_matrix = self.reduce_rows(self._matrix.copy())
 
     def rows_to_matrix(self, input_rows):
@@ -22,7 +22,7 @@ class LinearSystemOfEquations:
             for variable, coefficient in row.items():
                 matrix[i, var_col[variable]] = coefficient
             matrix[i, -1] = constants[i]
-        return matrix, var_col
+        return matrix, self.cols_to_vars(var_col)
 
     @staticmethod
     def parse_term(term: str):
@@ -75,10 +75,11 @@ class LinearSystemOfEquations:
             variable: position for position, variable in enumerate(sorted(variable_set))
         }
 
-    def cols_to_vars(self):
+    @staticmethod
+    def cols_to_vars(vars_to_cols):
         result = [
             variable
-            for variable, _ in list(sorted(self._var_col.items(), key=lambda x: x[1]))
+            for variable, _ in list(sorted(vars_to_cols.items(), key=lambda x: x[1]))
         ]
         return result
 
@@ -193,7 +194,7 @@ class LinearSystemOfEquations:
         raise Exception("Can't handle infinite solution sets yet")
 
     def display_solution(self):
-        vars = ", ".join(self.cols_to_vars())
+        vars = ", ".join(self._column_variables)
         print(f"{vars} = {self.solution_set()}")
 
     @classmethod
@@ -210,8 +211,6 @@ class LinearSystemOfEquations:
 def main():
     init_printing(use_unicode=True)
     system = LinearSystemOfEquations.from_file(sys.argv[1])
-    # print(system._matrix)
-    # print(system._matrix)
     system.display_solution()
 
 
