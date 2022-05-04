@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-from sympy import Rational, Matrix, zeros, oo, FiniteSet, init_printing
+from sympy import Rational, Matrix, symbols, zeros, oo, FiniteSet, init_printing
 from typing import List, Dict, Tuple
 
 
@@ -25,7 +25,11 @@ class LinearSystemOfEquationsParser:
     def parse_raw_row(cls, raw_row: str):
         variable_part, constant_part = raw_row.split("=")
         terms = cls.parse_variable_terms(variable_part)
-        constant = Rational(int(constant_part.strip()))
+        try:
+            constant = Rational(int(constant_part))
+        except ValueError:
+            constant = symbols(constant_part)
+
         return terms, constant
 
     @classmethod
