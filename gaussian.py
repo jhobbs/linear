@@ -83,6 +83,10 @@ class LinearSystemOfEquationsParser:
         return result
 
 
+class ManySolutionsError(Exception):
+    pass
+
+
 class LinearSystemOfEquations:
     def __init__(self, matrix, column_variables):
         self._matrix = matrix
@@ -178,7 +182,7 @@ class LinearSystemOfEquations:
             else:
                 boundary_row = i + 1
             return FiniteSet(tuple(self._reduced_matrix[:boundary_row, -1]))
-        raise Exception("Can't handle infinite solution sets yet")
+        raise ManySolutionsError("System has many solutions")
 
     def display_solution(self):
         vars = ", ".join(self._column_variables)
