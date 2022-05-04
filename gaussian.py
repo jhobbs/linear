@@ -189,7 +189,7 @@ class LinearSystemOfEquations:
 
     def display_solution(self):
         vars = ", ".join(self._column_variables)
-        print(f"{vars} = {self.solution_set()}")
+        print(f"({vars}) = {self.solution_set()}")
 
     @classmethod
     def from_file(cls, path):
