@@ -4,25 +4,22 @@ from sympy import Rational, Matrix, zeros, oo, FiniteSet, init_printing
 from typing import List, Dict, Tuple
 
 
-class LinearSystemOfEquations:
-    def __init__(self, raw_rows):
-        self._matrix, self._column_variables = self.rows_to_matrix(raw_rows)
-        self._reduced_matrix = self.reduce_rows(self._matrix.copy())
-
-    def rows_to_matrix(self, input_rows):
+class LinearSystemOfEquationsParser:
+    @classmethod
+    def rows_to_matrix(cls, input_rows):
         rows = []
         constants = []
         for row in input_rows:
-            row_variables, constant = self.parse_raw_row(row)
+            row_variables, constant = cls.parse_raw_row(row)
             rows.append(row_variables)
             constants.append(constant)
-        var_col = self.variables_to_cols(rows)
+        var_col = cls.variables_to_cols(rows)
         matrix = zeros(len(rows), len(var_col) + 1)
         for i, row in enumerate(rows):
             for variable, coefficient in row.items():
                 matrix[i, var_col[variable]] = coefficient
             matrix[i, -1] = constants[i]
-        return matrix, self.cols_to_vars(var_col)
+        return matrix, cls.cols_to_vars(var_col)
 
     @staticmethod
     def parse_term(term: str):
@@ -46,20 +43,22 @@ class LinearSystemOfEquations:
             variable,
         )
 
-    def parse_variable_terms(self, variable_part: str):
+    @classmethod
+    def parse_variable_terms(cls, variable_part: str):
         split_row = variable_part.split()
         terms = {}
         for raw_term in split_row:
-            coefficient, variable = self.parse_term(raw_term)
+            coefficient, variable = cls.parse_term(raw_term)
             if variable in terms:
                 terms[variable] += coefficient
             else:
                 terms[variable] = coefficient
         return terms
 
-    def parse_raw_row(self, raw_row: str):
+    @classmethod
+    def parse_raw_row(cls, raw_row: str):
         variable_part, constant_part = raw_row.split("=")
-        terms = self.parse_variable_terms(variable_part)
+        terms = cls.parse_variable_terms(variable_part)
         constant = Rational(int(constant_part.strip()))
         return terms, constant
 
@@ -82,6 +81,13 @@ class LinearSystemOfEquations:
             for variable, _ in list(sorted(vars_to_cols.items(), key=lambda x: x[1]))
         ]
         return result
+
+
+class LinearSystemOfEquations:
+    def __init__(self, matrix, column_variables):
+        self._matrix = matrix
+        self._column_variables = column_variables
+        self._reduced_matrix = self.reduce_rows(self._matrix.copy())
 
     @staticmethod
     def compare_rows(row_a, row_b):
@@ -186,7 +192,8 @@ class LinearSystemOfEquations:
     @classmethod
     def from_string(cls, string, sep=","):
         lines = string.split(sep)
-        return cls(lines)
+        matrix, column_variables = LinearSystemOfEquationsParser.rows_to_matrix(lines)
+        return cls(matrix, column_variables)
 
 
 def main():
