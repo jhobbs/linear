@@ -7,8 +7,7 @@ from typing import List, Dict, Tuple
 class LinearSystemOfEquations:
     def __init__(self, raw_rows):
         self._matrix, self._var_col = self.rows_to_matrix(raw_rows)
-        self._original_matrix = self._matrix.copy()
-        self.reduce_rows()
+        self._reduced_matrix = self.reduce_rows(self._matrix)
 
     def rows_to_matrix(self, input_rows):
         rows = []
@@ -131,13 +130,15 @@ class LinearSystemOfEquations:
                 break
         return matrix
 
-    def reduce_rows(self):
-        self._matrix = self._inner_reduce_rows(self.sort_rows(self._matrix))
-        self.back_substitute()
+    def reduce_rows(self, matrix):
+        new_matrix = matrix.copy()
+        reduced_matrix = self._inner_reduce_rows(self.sort_rows(new_matrix))
+        self.back_substitute(reduced_matrix)
+        return reduced_matrix
 
     def _inner_reduce_rows(self, matrix):
         if matrix[:, :-1].is_zero_matrix:
-            return
+            return matrix
 
         leading_coeff = matrix[0, 0]
         if leading_coeff == 0:
@@ -155,40 +156,41 @@ class LinearSystemOfEquations:
 
     def number_of_solutions(self):
         non_zero_rows = 0
-        for i in range(self._matrix.rows):
+        for i in range(self._reduced_matrix.rows):
             # check for contradiction
-            if self._matrix[i, :-1].is_zero_matrix and self._matrix[i, -1] != 0:
+            if (
+                self._reduced_matrix[i, :-1].is_zero_matrix
+                and self._reduced_matrix[i, -1] != 0
+            ):
                 return 0
 
-            if not self._matrix[i, :].is_zero_matrix:
+            if not self._reduced_matrix[i, :].is_zero_matrix:
                 non_zero_rows += 1
-        if non_zero_rows == len(self._matrix[i, :]) - 1:
+        if non_zero_rows == len(self._reduced_matrix[i, :]) - 1:
             return 1
         return oo
 
-    def back_substitute(self):
-        for i in range(self._matrix.rows - 1, 0, -1):
-            for j in range(len(self._matrix[i, :-1])):
-                if self._matrix[i, j] != 1:
+    def back_substitute(self, matrix):
+        for i in range(matrix.rows - 1, 0, -1):
+            for j in range(len(matrix[i, :-1])):
+                if matrix[i, j] != 1:
                     continue
                 for i2 in range(i):
-                    if self._matrix[i2, j] != 0:
-                        self._matrix[i2, :] = (
-                            self._matrix[i2, :]
-                            + -self._matrix[i2, j] * self._matrix[i, :]
-                        )
+                    if matrix[i2, j] != 0:
+                        matrix[i2, :] = matrix[i2, :] + -matrix[i2, j] * matrix[i, :]
+        return matrix
 
     def solution_set(self):
         if self.number_of_solutions() == 0:
             return FiniteSet()
         if self.number_of_solutions() == 1:
-            for i in range(self._matrix.rows):
-                if self._matrix[i, :].is_zero_matrix:
+            for i in range(self._reduced_matrix.rows):
+                if self._reduced_matrix[i, :].is_zero_matrix:
                     boundary_row = i
                     break
             else:
                 boundary_row = i + 1
-            return FiniteSet(tuple(self._matrix[:boundary_row, -1]))
+            return FiniteSet(tuple(self._reduced_matrix[:boundary_row, -1]))
         raise Exception("Can't handle infinite solution sets yet")
 
     def display_solution(self):
@@ -210,7 +212,6 @@ def main():
     init_printing(use_unicode=True)
     system = LinearSystemOfEquations.from_file(sys.argv[1])
     # print(system._matrix)
-    system.reduce_rows()
     # print(system._matrix)
     system.display_solution()
 
