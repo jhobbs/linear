@@ -21,6 +21,25 @@ class LinearSystemOfEquationsParser:
             matrix[i, -1] = constants[i]
         return matrix, cls.cols_to_vars(var_col)
 
+    @classmethod
+    def parse_raw_row(cls, raw_row: str):
+        variable_part, constant_part = raw_row.split("=")
+        terms = cls.parse_variable_terms(variable_part)
+        constant = Rational(int(constant_part.strip()))
+        return terms, constant
+
+    @classmethod
+    def parse_variable_terms(cls, variable_part: str):
+        split_row = variable_part.split()
+        terms = {}
+        for raw_term in split_row:
+            coefficient, variable = cls.parse_term(raw_term)
+            if variable in terms:
+                terms[variable] += coefficient
+            else:
+                terms[variable] = coefficient
+        return terms
+
     @staticmethod
     def parse_term(term: str):
         if not term[-1].isalpha():
@@ -42,25 +61,6 @@ class LinearSystemOfEquationsParser:
             coefficient,
             variable,
         )
-
-    @classmethod
-    def parse_variable_terms(cls, variable_part: str):
-        split_row = variable_part.split()
-        terms = {}
-        for raw_term in split_row:
-            coefficient, variable = cls.parse_term(raw_term)
-            if variable in terms:
-                terms[variable] += coefficient
-            else:
-                terms[variable] = coefficient
-        return terms
-
-    @classmethod
-    def parse_raw_row(cls, raw_row: str):
-        variable_part, constant_part = raw_row.split("=")
-        terms = cls.parse_variable_terms(variable_part)
-        constant = Rational(int(constant_part.strip()))
-        return terms, constant
 
     @staticmethod
     def variables_to_cols(rows: List[dict]):
