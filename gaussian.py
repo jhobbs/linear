@@ -95,7 +95,10 @@ class LinearSystemOfEquations:
     def __init__(self, matrix, column_variables):
         self._matrix = matrix
         self._column_variables = column_variables
-        self._reduced_matrix = self._reduce_rows(self._matrix.copy())
+        self._echelon_matrix = self._gaussian_elimination(
+            self._sort_rows(self._matrix.copy())
+        )
+        self._reduced_matrix = self._reduce_rows(self._echelon_matrix.copy())
 
     @staticmethod
     def _compare_rows(row_a, row_b):
@@ -128,12 +131,14 @@ class LinearSystemOfEquations:
 
     def _reduce_rows(self, matrix):
         """Convert matrix to reduced row echelon form."""
-        echelon_matrix = self._gaussian_elimination(self._sort_rows(matrix))
-        self._back_substitute(echelon_matrix)
-        return echelon_matrix
+        self._back_substitute(matrix)
+        return matrix
 
     def _gaussian_elimination(self, matrix):
-        """Convert matrix to echelon form."""
+        """Convert matrix to echelon form.
+
+        Actually, this goes a bit further and makes each leading variable 1.
+        """
         if matrix[:, :-1].is_zero_matrix:
             return matrix
 
