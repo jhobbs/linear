@@ -9,17 +9,30 @@ class LinearSystemOfEquationsParser:
     def rows_to_matrix(cls, input_rows):
         rows = []
         constants = []
-        for row in input_rows:
+        if input_rows[0].startswith("order:"):
+            operation_rows = input_rows[1:]
+            col_var = input_rows[0][6:].split()
+            var_col = {variable: col for col, variable in enumerate(col_var)}
+        else:
+            operation_rows = input_rows
+            col_var = None
+            var_col = None
+
+        for row in operation_rows:
             row_variables, constant = cls.parse_raw_row(row)
             rows.append(row_variables)
             constants.append(constant)
-        var_col = cls.variables_to_cols(rows)
+
+        if var_col is None:
+            var_col = cls.variables_to_cols(rows)
+            col_var = cls.cols_to_vars(var_col)
+
         matrix = zeros(len(rows), len(var_col) + 1)
         for i, row in enumerate(rows):
             for variable, coefficient in row.items():
                 matrix[i, var_col[variable]] = coefficient
             matrix[i, -1] = constants[i]
-        return matrix, cls.cols_to_vars(var_col)
+        return matrix, col_var
 
     @classmethod
     def parse_raw_row(cls, raw_row: str):
@@ -74,9 +87,10 @@ class LinearSystemOfEquationsParser:
         for row in rows:
             for variable in row.keys():
                 variable_set.add(variable)
-        return {
+        mapping = {
             variable: position for position, variable in enumerate(sorted(variable_set))
         }
+        return mapping
 
     @staticmethod
     def cols_to_vars(vars_to_cols):
@@ -195,6 +209,18 @@ class LinearSystemOfEquations:
             return 1
         return oo
 
+    def partition_variables(self):
+        """Partition the variables into leading and free variables."""
+        matrix = self._reduced_matrix
+        leading = set()
+        for i in range(matrix.rows - 1):
+            for j in range(matrix.cols - 1):
+                if matrix[i, j] != 0:
+                    leading.add(self._column_variables[j])
+                    break
+        free = set(self._column_variables) - leading
+        return leading, free
+
     def solution_set(self):
         if self.number_of_solutions() == 0:
             return FiniteSet()
@@ -230,6 +256,8 @@ def main():
     print(system._echelon_matrix)
     print(system._normalized_echelon_matrix)
     print(system._reduced_matrix)
+    leading, free = system.partition_variables()
+    print(f"Leading: {leading}, Free: {free}")
     system.display_solution()
 
 
