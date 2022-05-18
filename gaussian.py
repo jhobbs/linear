@@ -185,11 +185,13 @@ class LinearSystemOfEquations:
     def _back_substitute(self, matrix):
         for i in range(matrix.rows - 1, 0, -1):
             for j in range(len(matrix[i, :-1])):
-                if matrix[i, j] != 1:
-                    continue
-                for i2 in range(i):
-                    if matrix[i2, j] != 0:
-                        matrix[i2, :] = matrix[i2, :] + -matrix[i2, j] * matrix[i, :]
+                if matrix[i, j] == 1:
+                    for i2 in range(i):
+                        if matrix[i2, j] != 0:
+                            matrix[i2, :] = (
+                                matrix[i2, :] + -matrix[i2, j] * matrix[i, :]
+                            )
+                    break
         return matrix
 
     def number_of_solutions(self):
@@ -253,9 +255,10 @@ class LinearSystemOfEquations:
 def main():
     init_printing(use_unicode=True)
     system = LinearSystemOfEquations.from_file(sys.argv[1])
-    print(system._echelon_matrix)
-    print(system._normalized_echelon_matrix)
-    print(system._reduced_matrix)
+    print(repr(system._matrix))
+    print(repr(system._echelon_matrix))
+    print(repr(system._normalized_echelon_matrix))
+    print(repr(system._reduced_matrix))
     leading, free = system.partition_variables()
     print(f"Leading: {leading}, Free: {free}")
     system.display_solution()
