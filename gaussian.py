@@ -98,7 +98,10 @@ class LinearSystemOfEquations:
         self._echelon_matrix = self._gaussian_elimination(
             self._sort_rows(self._matrix.copy())
         )
-        self._reduced_matrix = self._reduce_rows(self._echelon_matrix.copy())
+        self._normalized_echelon_matrix = self._normalize_rows(
+            self._echelon_matrix.copy()
+        )
+        self._reduced_matrix = self._reduce_rows(self._normalized_echelon_matrix.copy())
 
     @staticmethod
     def _compare_rows(row_a, row_b):
@@ -134,6 +137,14 @@ class LinearSystemOfEquations:
         self._back_substitute(matrix)
         return matrix
 
+    def _normalize_rows(self, matrix):
+        for i in range(matrix.rows):
+            for j in range(matrix.cols):
+                if matrix[i, j] != 0:
+                    matrix[i, :] = (1 / matrix[i, j]) * matrix[i, :]
+                    break
+        return matrix
+
     def _gaussian_elimination(self, matrix):
         """Convert matrix to echelon form.
 
@@ -145,12 +156,13 @@ class LinearSystemOfEquations:
         leading_coeff = matrix[0, 0]
         if leading_coeff == 0:
             raise Exception(f"Unexpected 0 leading coefficient: {i} {matrix}")
-        matrix[0, :] = matrix[0, :] * 1 / leading_coeff
         for i in range(matrix.rows - 1):
             row_leading_coeff = matrix[i + 1, 0]
             if row_leading_coeff == 0:
                 continue
-            matrix[i + 1, :] = matrix[i + 1, :] + (-row_leading_coeff * matrix[0, :])
+            matrix[i + 1, :] = matrix[i + 1, :] + (
+                -(row_leading_coeff / leading_coeff) * matrix[0, :]
+            )
         reduced_submatrix = self._gaussian_elimination(matrix[1:, 1:])
         if reduced_submatrix is not None:
             matrix[1:, 1:] = reduced_submatrix
@@ -215,6 +227,9 @@ class LinearSystemOfEquations:
 def main():
     init_printing(use_unicode=True)
     system = LinearSystemOfEquations.from_file(sys.argv[1])
+    print(system._echelon_matrix)
+    print(system._normalized_echelon_matrix)
+    print(system._reduced_matrix)
     system.display_solution()
 
 
