@@ -32,7 +32,7 @@ class LinearSystemOfEquationsParser:
             for variable, coefficient in row.items():
                 matrix[i, var_col[variable]] = coefficient
             matrix[i, -1] = constants[i]
-        return matrix, col_var
+        return matrix, symbols(col_var)
 
     @classmethod
     def parse_raw_row(cls, raw_row: str):
@@ -160,10 +160,7 @@ class LinearSystemOfEquations:
         return matrix
 
     def _gaussian_elimination(self, matrix):
-        """Convert matrix to echelon form.
-
-        Actually, this goes a bit further and makes each leading variable 1.
-        """
+        """Convert matrix to echelon form."""
         if matrix[:, :-1].is_zero_matrix:
             return matrix
 
@@ -214,30 +211,46 @@ class LinearSystemOfEquations:
     def partition_variables(self):
         """Partition the variables into leading and free variables."""
         matrix = self._reduced_matrix
-        leading = set()
+        leading = []
         for i in range(matrix.rows - 1):
             for j in range(matrix.cols - 1):
                 if matrix[i, j] != 0:
-                    leading.add(self._column_variables[j])
+                    leading.append(self._column_variables[j])
                     break
-        free = set(self._column_variables) - leading
+        free = [var for var in self._column_variables if var not in leading]
         return leading, free
 
     def solution_set(self):
+        matrix = self._reduced_matrix
         if self.number_of_solutions() == 0:
             return FiniteSet()
         if self.number_of_solutions() == 1:
-            for i in range(self._reduced_matrix.rows):
-                if self._reduced_matrix[i, :].is_zero_matrix:
+            for i in range(matrix.rows):
+                if matrix[i, :].is_zero_matrix:
                     boundary_row = i
                     break
             else:
                 boundary_row = i + 1
-            return FiniteSet(tuple(self._reduced_matrix[:boundary_row, -1]))
+            return FiniteSet(tuple(matrix[:boundary_row, -1]))
+        parameters = []
+        for i in range(matrix.rows):
+            parameter = matrix[i, -1]
+            for j in range(matrix.cols - 1):
+                if matrix[i, j] == 1:
+                    break
+            else:
+                continue
+            for k in range(j + 1, matrix.cols - 1):
+                parameter += self._column_variables[k] * -matrix[i, k]
+            parameters.append(parameter)
+        _, free_variables = self.partition_variables()
+        parameters.extend(list(free_variables))
+        return FiniteSet(tuple(parameters))
+
         raise ManySolutionsError("System has many solutions")
 
     def display_solution(self):
-        vars = ", ".join(self._column_variables)
+        vars = ", ".join(map(str, self._column_variables))
         print(f"({vars}) = {self.solution_set()}")
 
     @classmethod
