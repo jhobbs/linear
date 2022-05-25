@@ -1,7 +1,7 @@
 import pytest
 from sympy import FiniteSet, Rational, EmptySet
 
-from gaussian import LinearSystemOfEquations, ManySolutionsError
+from gaussian import LinearSystemOfEquations
 
 
 @pytest.mark.parametrize(

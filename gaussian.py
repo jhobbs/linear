@@ -101,10 +101,6 @@ class LinearSystemOfEquationsParser:
         return result
 
 
-class ManySolutionsError(Exception):
-    pass
-
-
 class LinearSystemOfEquations:
     def __init__(self, matrix, column_variables):
         self._matrix = matrix
@@ -220,18 +216,7 @@ class LinearSystemOfEquations:
         free = [var for var in self._column_variables if var not in leading]
         return leading, free
 
-    def solution_set(self):
-        matrix = self._reduced_matrix
-        if self.number_of_solutions() == 0:
-            return FiniteSet()
-        if self.number_of_solutions() == 1:
-            for i in range(matrix.rows):
-                if matrix[i, :].is_zero_matrix:
-                    boundary_row = i
-                    break
-            else:
-                boundary_row = i + 1
-            return FiniteSet(tuple(matrix[:boundary_row, -1]))
+    def _multiple_solutions_set(self, matrix):
         parameters = []
         for i in range(matrix.rows):
             parameter = matrix[i, -1]
@@ -247,7 +232,48 @@ class LinearSystemOfEquations:
         parameters.extend(list(free_variables))
         return FiniteSet(tuple(parameters))
 
-        raise ManySolutionsError("System has many solutions")
+    def _multiple_solutions_set_as_vectors(self, matrix):
+        particular = matrix.col(-1)
+        _, free_variables = self.partition_variables()
+        column_vectors = {
+            variable: Matrix.zeros(rows=matrix.rows).col(0)
+            for variable in free_variables
+        }
+        parameters = []
+        for i in range(matrix.rows):
+            for j in range(matrix.cols - 1):
+                if matrix[i, j] == 1:
+                    break
+                if self._column_variables[j] in free_variables and i == j:
+                    column_vectors[self._column_variables[j]][i] = 1
+            else:
+                continue
+            for k in range(j + 1, matrix.cols - 1):
+                if self._column_variables[k] not in free_variables:
+                    continue
+                column_vectors[self._column_variables[k]][i] = -matrix[i, k]
+        display = [f"{repr(particular)}"]
+        for variable in free_variables:
+            display.append(f"{repr(column_vectors[variable])} * {variable}")
+        print(" + ".join(display))
+        vector_sum = particular
+        for variable in free_variables:
+            vector_sum += variable * column_vectors[variable]
+        return FiniteSet(vector_sum)
+
+    def solution_set(self):
+        matrix = self._reduced_matrix
+        if self.number_of_solutions() == 0:
+            return FiniteSet()
+        if self.number_of_solutions() == 1:
+            for i in range(matrix.rows):
+                if matrix[i, :].is_zero_matrix:
+                    boundary_row = i
+                    break
+            else:
+                boundary_row = i + 1
+            return FiniteSet(tuple(matrix[:boundary_row, -1]))
+        return self._multiple_solutions_set_as_vectors(matrix)
 
     def display_solution(self):
         vars = ", ".join(map(str, self._column_variables))
@@ -273,7 +299,6 @@ def main():
     print(repr(system._normalized_echelon_matrix))
     print(repr(system._reduced_matrix))
     leading, free = system.partition_variables()
-    print(f"Leading: {leading}, Free: {free}")
     system.display_solution()
 
 
