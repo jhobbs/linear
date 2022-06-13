@@ -254,7 +254,7 @@ class LinearSystemOfEquations:
                     column_vectors[free_variable][row] = -matrix[row, col]
             column_vectors[free_variable][col] = 1
         particular = Matrix.zeros(rows=len(self._column_variables)).col(0)
-        for row in range(matrix.rows):
+        for row in range(min(len(self._column_variables), matrix.rows)):
             particular[row] = matrix[row, -1]
         display = [f"{repr(particular)}"]
         for variable in free_variables:

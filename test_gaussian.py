@@ -182,6 +182,18 @@ a, b, c, d, e, x, y, z, w = symbols("a b c d e x y z w")
                 )
             ),
         ),
+        (
+            # One.1.2.20b
+            LinearSystemOfEquations.from_string(
+                "x +y -2z = 0, x -y = -3, 3x -y -2z = -6, 2y -2z = 3"
+            ),
+            FiniteSet(
+                (
+                    Matrix([[Rational("-3 / 2")], [Rational("3 / 2")], [0]])
+                    + Matrix([[1], [1], [1]]) * z
+                )
+            ),
+        ),
     ),
 )
 def test_infinite_solutions_with_solution_set(system, solution):
