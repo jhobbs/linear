@@ -233,25 +233,21 @@ class LinearSystemOfEquations:
         return FiniteSet(tuple(parameters))
 
     def _multiple_solutions_set_as_vectors(self, matrix):
-        particular = matrix.col(-1)
-        _, free_variables = self.partition_variables()
+        leading, free_variables = self.partition_variables()
         column_vectors = {
-            variable: Matrix.zeros(rows=matrix.rows).col(0)
+            variable: Matrix.zeros(rows=len(self._column_variables)).col(0)
             for variable in free_variables
         }
-        parameters = []
-        for i in range(matrix.rows):
-            for j in range(matrix.cols - 1):
-                if matrix[i, j] == 1:
-                    break
-                if self._column_variables[j] in free_variables and i == j:
-                    column_vectors[self._column_variables[j]][i] = 1
-            else:
-                continue
-            for k in range(j + 1, matrix.cols - 1):
-                if self._column_variables[k] not in free_variables:
-                    continue
-                column_vectors[self._column_variables[k]][i] = -matrix[i, k]
+        for free_variable in free_variables:
+            col = self._column_variables.index(free_variable)
+            for row in range(len(self._column_variables)):
+                if self._column_variables[row] in leading:
+                    column_vectors[free_variable][row] = -matrix[row, col]
+                elif self._column_variables[row] == free_variable:
+                    column_vectors[free_variable][row] = 1
+        particular = Matrix.zeros(rows=len(self._column_variables)).col(0)
+        for row in range(matrix.rows):
+            particular[row] = matrix[row, -1]
         display = [f"{repr(particular)}"]
         for variable in free_variables:
             display.append(f"{repr(column_vectors[variable])} * {variable}")
