@@ -1,5 +1,5 @@
 import pytest
-from sympy import FiniteSet, Rational, EmptySet
+from sympy import FiniteSet, Matrix, Rational, EmptySet, symbols
 
 from gaussian import LinearSystemOfEquations
 
@@ -90,3 +90,99 @@ def test_finite_solutions(system, solution):
 )
 def test_infinite_solutions(system):
     solution = system.solution_set()
+
+
+a, b, c, d, e, x, y, z, w = symbols("a b c d e x y z w")
+
+
+@pytest.mark.parametrize(
+    "system, solution",
+    (
+        (
+            # One.1.2.19a
+            LinearSystemOfEquations.from_string("2x +y -z =1, 4x -y =3"),
+            FiniteSet(
+                (
+                    Matrix(
+                        [
+                            [Rational("2/3")],
+                            [Rational("-1/3")],
+                            [0],
+                        ]
+                    )
+                    + Matrix(
+                        [
+                            [Rational("1/6")],
+                            [Rational("2/3")],
+                            [1],
+                        ]
+                    )
+                    * z
+                )
+            ),
+        ),
+        (
+            # One.1.2.19b
+            LinearSystemOfEquations.from_string(
+                "order: x y z w, x -z = 1, y +2z -w = 3, x +2y +3z -w = 7"
+            ),
+            FiniteSet(
+                (
+                    Matrix(
+                        [
+                            [1],
+                            [3],
+                            [0],
+                            [0],
+                        ]
+                    )
+                    + Matrix(
+                        [
+                            [1],
+                            [-2],
+                            [1],
+                            [0],
+                        ]
+                    )
+                    * z
+                )
+            ),
+        ),
+        (
+            # One.1.2.19c
+            LinearSystemOfEquations.from_string(
+                "order: x y z w, x -y +z = 0, y +w =0, 3x -2y +3z +w = 0, -y -w = 0"
+            ),
+            FiniteSet(
+                (
+                    Matrix([[0], [0], [0], [0]])
+                    + Matrix([[-1], [0], [1], [0]]) * z
+                    + Matrix([[-1], [-1], [0], [1]]) * w
+                )
+            ),
+        ),
+        (
+            # One.1.2.19d
+            LinearSystemOfEquations.from_string(
+                "a +2b +3c +d -e = 1, 3a -b +c +d +e = 3"
+            ),
+            FiniteSet(
+                (
+                    Matrix([[1], [0], [0], [0], [0]])
+                    + Matrix(
+                        [[Rational("-5 / 7")], [Rational("-8 / 7")], [1], [0], [0]]
+                    )
+                    * c
+                    + Matrix(
+                        [[Rational("-3 / 7")], [Rational("-2 / 7")], [0], [1], [0]]
+                    )
+                    * d
+                    + Matrix([[Rational("-1 / 7")], [Rational("4 / 7")], [0], [0], [1]])
+                    * e
+                )
+            ),
+        ),
+    ),
+)
+def test_infinite_solutions_with_solution_set(system, solution):
+    assert system.solution_set() == solution

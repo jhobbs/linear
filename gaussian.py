@@ -162,7 +162,7 @@ class LinearSystemOfEquations:
 
         leading_coeff = matrix[0, 0]
         if leading_coeff == 0:
-            raise Exception(f"Unexpected 0 leading coefficient: {i} {matrix}")
+            return matrix
         for i in range(matrix.rows - 1):
             row_leading_coeff = matrix[i + 1, 0]
             if row_leading_coeff == 0:
@@ -216,6 +216,13 @@ class LinearSystemOfEquations:
         free = [var for var in self._column_variables if var not in leading]
         return leading, free
 
+    def leading_rows(self):
+        matrix = self._reduced_matrix
+        for i in range(matrix.rows):
+            if matrix[i, :].is_zero_matrix:
+                return i
+        return matrix.rows
+
     def _multiple_solutions_set(self, matrix):
         parameters = []
         for i in range(matrix.rows):
@@ -241,10 +248,11 @@ class LinearSystemOfEquations:
         for free_variable in free_variables:
             col = self._column_variables.index(free_variable)
             for row in range(len(self._column_variables)):
-                if self._column_variables[row] in leading:
+                # if the row has a leading variable, put the coeff in the
+                # free variable's column vector in this row's position
+                if row < self.leading_rows():
                     column_vectors[free_variable][row] = -matrix[row, col]
-                elif self._column_variables[row] == free_variable:
-                    column_vectors[free_variable][row] = 1
+            column_vectors[free_variable][col] = 1
         particular = Matrix.zeros(rows=len(self._column_variables)).col(0)
         for row in range(matrix.rows):
             particular[row] = matrix[row, -1]
