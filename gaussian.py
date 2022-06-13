@@ -208,7 +208,7 @@ class LinearSystemOfEquations:
         """Partition the variables into leading and free variables."""
         matrix = self._reduced_matrix
         leading = []
-        for i in range(matrix.rows - 1):
+        for i in range(matrix.rows):
             for j in range(matrix.cols - 1):
                 if matrix[i, j] != 0:
                     leading.append(self._column_variables[j])
